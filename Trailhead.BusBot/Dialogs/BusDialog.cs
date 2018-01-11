@@ -21,9 +21,21 @@ namespace Trailhead.BusBot.Dialogs
 
 		private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
 		{
-			// return our reply to the user
-			await context.PostAsync("Hello");
-			
+			var busDialog = new BusDialog();
+			var text = ((Activity)await result).Text ?? string.Empty;
+			var lower = text.ToLower();
+			var messageActivity = Activity.CreateMessageActivity();
+
+			messageActivity.Text = "Sorry, not sure what you're trying to do.";
+			if (!Regex.IsMatch(lower, "[0-9]+"))
+			{
+				messageActivity = (!lower.Contains("list") ? busDialog.HelpCommand(lower, context) : busDialog.BusListingCommand(lower, context));
+			}
+			else
+			{
+				messageActivity = busDialog.BusStatusCommand(lower, context);
+			}
+			await context.PostAsync(messageActivity);
 			context.Wait(MessageReceivedAsync);
 		}
 
